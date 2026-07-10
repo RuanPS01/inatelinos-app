@@ -9,14 +9,15 @@ conta **Microsoft institucional** (`@inatel.br` / `@sigla.inatel.br`).
 
 ## Acesso exclusivo Inatel 🔐
 
-- Login **apenas** com a conta Microsoft do Inatel (Microsoft Entra ID /
-  Office 365), via OAuth 2.0 com PKCE.
-- A existência e o funcionamento do e-mail são validados pela própria
-  Microsoft; o usuário confirma a conta detectada antes de entrar.
-- Aceita `@inatel.br` e variações `@sigla.inatel.br` (qualquer sigla de curso
-  que o Inatel venha a criar).
-- A restrição de domínio também é aplicada **no servidor**, pelas regras do
-  Firestore e do Storage.
+- Cadastro **apenas** com e-mail institucional: `@inatel.br` e variações
+  `@sigla.inatel.br` (qualquer sigla de curso que o Inatel venha a criar).
+- A conta só é liberada após o usuário **confirmar o link enviado ao
+  e-mail** — ou seja, é preciso ter acesso real à caixa de entrada do Inatel.
+- A restrição de domínio e a exigência de e-mail confirmado também são
+  aplicadas **no servidor**, pelas regras do Firestore e do Storage.
+- Login integrado com a conta Microsoft do Inatel: código pronto e
+  preservado no projeto para ativação futura (ver seção opcional do
+  [SETUP.md](SETUP.md)).
 
 ## Identidade visual 🎨
 
@@ -52,10 +53,10 @@ Inspiradas no funcionamento do Instagram:
 ## Tecnologias 💻
 
 - React Native 0.79 + Expo SDK 53
-- Firebase Authentication (provedor OpenID Connect → Microsoft Entra ID)
+- Firebase Authentication (e-mail/senha + verificação obrigatória de e-mail)
 - Cloud Firestore + Firebase Storage
-- expo-auth-session (OAuth 2.0 + PKCE), expo-crypto
 - React Navigation, Reanimated, Gesture Handler, Bottom Sheet
+- expo-auth-session / expo-crypto (reservados para o futuro login Microsoft)
 
 ## Como rodar 🛠️
 
@@ -64,13 +65,10 @@ variáveis de ambiente e build) está no **[SETUP.md](SETUP.md)**. Resumo:
 
 ```bash
 npm install
-cp .env.example .env   # preencha com suas credenciais (ver SETUP.md)
+cp .env.example .env   # preencha com suas credenciais do Firebase (ver SETUP.md)
 npx expo prebuild --clean
 npx expo run:android   # ou npx expo run:ios
 ```
-
-> ⚠️ O login Microsoft usa o scheme nativo `inatelinos://` e não funciona no
-> Expo Go — use um development build como acima.
 
 ## Créditos
 

@@ -1,23 +1,26 @@
 # Guia de configuração do Inatelinos
 
 Passo a passo de tudo que precisa ser configurado manualmente para o app
-funcionar de ponta a ponta: Firebase, Microsoft Entra ID (login com a conta
-Microsoft do Inatel) e execução do app.
+funcionar de ponta a ponta.
 
-## Visão geral do login
+## Visão geral do acesso
 
-O fluxo de autenticação funciona assim:
-
-1. O app abre o login da Microsoft (OAuth 2.0 com PKCE) fixado no **tenant do
-   Inatel** — somente contas da organização conseguem autenticar.
-2. O app valida que o e-mail retornado é `@inatel.br` ou `@sigla.inatel.br`.
-3. O usuário **confirma** a conta detectada em um modal.
-4. O token da Microsoft é entregue ao **Firebase Authentication** (provedor
-   OpenID Connect), que valida o token no servidor e cria a sessão.
-5. No primeiro acesso, o usuário escolhe seu nome de usuário e o perfil é
+1. O cadastro só aceita e-mails institucionais do Inatel: `@inatel.br` ou
+   `@sigla.inatel.br` (qualquer sigla de curso que o Inatel venha a criar).
+2. Ao criar a conta, o Firebase envia um **link de confirmação** para o
+   e-mail informado. O app fica bloqueado na tela "Confirme seu e-mail" até o
+   link ser aberto — ou seja, só entra quem realmente tem acesso à caixa de
+   entrada do Inatel.
+3. Após a confirmação, o usuário escolhe o nome de usuário e o perfil é
    criado no Firestore.
-6. As regras do Firestore/Storage reforçam **no servidor** que apenas e-mails
-   do domínio Inatel acessam os dados.
+4. As regras do Firestore/Storage reforçam **no servidor** as duas condições:
+   domínio Inatel **e** e-mail confirmado (`email_verified`).
+
+> 💡 **Login com a Microsoft (futuro):** o código do login integrado com a
+> conta Microsoft do Inatel está pronto e preservado no projeto
+> (`src/hooks/useMicrosoftAuth.js`, `src/components/login/MicrosoftLogin.jsx`
+> e `src/services/authConfig.js`), mas não está ligado às telas. Quando
+> quiser ativá-lo, veja a seção "Opcional: login Microsoft" no fim deste guia.
 
 ---
 
@@ -27,8 +30,6 @@ O fluxo de autenticação funciona assim:
 - Android Studio com um emulador configurado (ou um dispositivo físico) —
   para iOS, um Mac com Xcode
 - Uma conta Google (para o Firebase)
-- Uma conta Microsoft com acesso ao [portal.azure.com](https://portal.azure.com)
-  (qualquer conta serve para registrar o aplicativo; ver observação no passo 3)
 
 Instale as dependências do projeto:
 
@@ -39,14 +40,13 @@ npm install
 ## 2. Criar o projeto no Firebase
 
 > O projeto original apontava para o Firebase do autor do clone. Você
-> **precisa** de um projeto próprio, pois o provedor OIDC (passo 4) é
-> configurado no console do Firebase.
+> **precisa** de um projeto próprio para controlar a autenticação e os dados.
 
 1. Acesse [console.firebase.google.com](https://console.firebase.google.com)
    e crie um projeto (ex.: `inatelinos`).
 2. Adicione um **app Web** (ícone `</>`), dê um apelido (ex.: `inatelinos-app`)
    e copie o objeto `firebaseConfig` exibido — você vai colocar esses valores
-   no `.env` (passo 5).
+   no `.env` (passo 4).
 3. **Firestore**: menu *Build → Firestore Database → Create database* (modo
    produção). Depois, em *Rules*, cole o conteúdo de
    [`src/services/firebase.rules`](src/services/firebase.rules) e publique.
@@ -54,86 +54,43 @@ npm install
    conteúdo de [`src/services/firestore.rules`](src/services/firestore.rules)
    e publique.
 
-## 3. Registrar o aplicativo no Microsoft Entra ID (Azure)
+## 3. Habilitar o login por e-mail/senha e a confirmação de e-mail
 
-1. Acesse [portal.azure.com](https://portal.azure.com) → **Microsoft Entra ID**
-   → **App registrations** → **New registration**.
-2. Preencha:
-   - **Name**: `Inatelinos`
-   - **Supported account types**:
-     - Se você tem acesso administrativo ao tenant do Inatel, escolha
-       *"Accounts in this organizational directory only"*.
-     - Se está registrando o app em **outro** tenant (ex.: sua conta de
-       desenvolvedor), escolha *"Accounts in any organizational directory"*
-       (multitenant). O app já restringe o login ao tenant do Inatel, então
-       na prática só contas do Inatel entram.
-   - **Redirect URI**: selecione a plataforma **"Mobile and desktop
-     applications"** e informe manualmente: `inatelinos://auth`
-3. Após criar, anote o **Application (client) ID** (GUID) da página *Overview*.
-4. Em *API permissions*, confirme que existem as permissões delegadas do
-   Microsoft Graph: `openid`, `profile`, `email` (e `User.Read`, que vem por
-   padrão). São permissões básicas que não exigem consentimento de
-   administrador na maioria das organizações.
+1. No console do Firebase: *Build → Authentication → Get started*.
+2. Na aba **Sign-in method**, habilite o provedor **Email/Password**
+   (apenas o primeiro toggle; "Email link" não é necessário).
+3. Na aba **Templates**, selecione o modelo **Email address verification** e:
+   - Clique no lápis e ajuste o idioma do template (ícone de idioma no
+     rodapé da página) para **Português (Brasil)**, se desejar;
+   - Opcionalmente personalize o remetente/assunto.
+4. (Recomendado) Em *Authentication → Settings → User actions*, deixe
+   **desmarcada** a opção "Email enumeration protection" se quiser mensagens
+   de erro mais específicas no login — ou deixe marcada para mais segurança
+   (o app já trata os dois casos).
 
-### 3.1 Descobrir o Tenant ID do Inatel
+> A validação do domínio Inatel acontece no app **e** nas regras do
+> Firestore/Storage. O Firebase Authentication em si não bloqueia a criação
+> de contas com outros domínios, mas essas contas nunca passam da tela de
+> confirmação e não conseguem ler nem gravar nenhum dado.
 
-O tenant ID é público. Abra no navegador:
-
-```
-https://login.microsoftonline.com/inatel.br/v2.0/.well-known/openid-configuration
-```
-
-No JSON retornado, o campo `issuer` tem o formato
-`https://login.microsoftonline.com/<TENANT_ID>/v2.0` — o GUID no meio é o
-**Tenant ID do Inatel**. Anote o issuer completo também: ele será usado no
-Firebase.
-
-> ⚠️ Se a organização do Inatel restringir o consentimento de aplicativos de
-> terceiros, pode ser necessário pedir ao administrador de TI do Inatel que
-> aprove o aplicativo (ou que registre o app dentro do próprio tenant).
-
-## 4. Habilitar o provedor OpenID Connect no Firebase
-
-1. No console do Firebase: *Build → Authentication → Sign-in method →
-   Add new provider → OpenID Connect*.
-   - Se o console pedir upgrade para o **Identity Platform**, aceite (o plano
-     gratuito cobre o uso normal).
-2. Preencha:
-   - **Grant type / Response type**: `ID token` (fluxo implícito — não requer
-     client secret; o app obtém o token via code+PKCE e o entrega ao Firebase)
-   - **Name**: `Microsoft` → o ID gerado deve ser **`oidc.microsoft`**
-     (precisa bater com `EXPO_PUBLIC_FIREBASE_OIDC_PROVIDER_ID` do `.env`)
-   - **Client ID**: o *Application (client) ID* do passo 3
-   - **Issuer (URL)**: `https://login.microsoftonline.com/<TENANT_ID>/v2.0`
-     (o issuer exato descoberto no passo 3.1 — **não** use `common` ou
-     `organizations`, o Firebase exige issuer fixo)
-3. Salve.
-
-## 5. Configurar as variáveis de ambiente
+## 4. Configurar as variáveis de ambiente
 
 ```bash
 cp .env.example .env
 ```
 
-Preencha o `.env` com:
-
-| Variável | Onde obter |
-|---|---|
-| `EXPO_PUBLIC_FIREBASE_API_KEY` etc. | Objeto `firebaseConfig` do passo 2.2 |
-| `EXPO_PUBLIC_AZURE_CLIENT_ID` | *Application (client) ID* do passo 3.3 |
-| `EXPO_PUBLIC_AZURE_TENANT_ID` | Tenant ID do Inatel (passo 3.1) |
-| `EXPO_PUBLIC_FIREBASE_OIDC_PROVIDER_ID` | `oidc.microsoft` (padrão) |
+Preencha o `.env` com os valores do `firebaseConfig` copiado no passo 2.2
+(`EXPO_PUBLIC_FIREBASE_API_KEY`, `EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN`, etc.).
+As variáveis `EXPO_PUBLIC_AZURE_*` são só para o futuro login Microsoft e
+podem ficar vazias.
 
 O arquivo `.env` está no `.gitignore` — não faça commit dele.
 
-## 6. Rodar o app
-
-O login com a Microsoft usa o scheme nativo `inatelinos://` e por isso **não
-funciona no Expo Go** — use um *development build*:
+## 5. Rodar o app
 
 ```bash
 # Regenera as pastas nativas com o novo pacote (br.inatel.inatelinos),
-# nome (Inatelinos), ícones e o scheme inatelinos://
+# nome (Inatelinos) e ícones
 npx expo prebuild --clean
 
 # Android (emulador aberto ou dispositivo conectado)
@@ -145,29 +102,67 @@ npx expo run:ios
 
 Nas execuções seguintes, basta `npx expo start --dev-client`.
 
-## 7. Checklist de verificação
+> O fluxo de cadastro/login por e-mail e senha também funciona no **Expo Go**
+> (`npx expo start`), útil para testar rápido — mas o acesso à galeria no
+> Android exige o development build acima.
 
-- [ ] Tela de login mostra o logotipo Inatelinos e o botão "Entrar com a Microsoft"
-- [ ] O botão abre a página de login da Microsoft já restrita à organização
-- [ ] Login com conta fora do Inatel (ex.: Gmail/Outlook pessoal) é recusado
-- [ ] Após autenticar, aparece o modal "Conta Inatel verificada!" com o e-mail
-- [ ] Ao confirmar, no primeiro acesso abre a tela "Complete seu perfil"
+## 6. Checklist de verificação
+
+- [ ] Tela de login mostra o logotipo Inatelinos e os campos de e-mail/senha
+- [ ] Cadastro recusa e-mails fora do domínio (ex.: gmail.com) com aviso claro
+- [ ] Cadastro com `@inatel.br` ou `@sigla.inatel.br` cria a conta e cai na
+      tela "Confirme seu e-mail"
+- [ ] O e-mail de confirmação chega na caixa de entrada (ou spam)
+- [ ] Sem confirmar, o app não avança (mesmo fechando e abrindo de novo)
+- [ ] Após clicar no link, o app detecta sozinho (ou pelo botão "Já
+      confirmei") e abre a tela "Complete seu perfil"
 - [ ] Depois de criar o perfil, o feed abre normalmente
+- [ ] "Esqueceu a senha?" envia o e-mail de redefinição
 
 ## Solução de problemas
 
 | Sintoma | Causa provável / correção |
 |---|---|
-| `auth/operation-not-allowed` | O provedor OIDC não foi criado/habilitado no Firebase (passo 4) |
-| `auth/invalid-credential` | Issuer ou Client ID do provedor OIDC não batem com o registro do Azure — confira o passo 4.2 |
-| `AADSTS50194` / erro de tenant | `EXPO_PUBLIC_AZURE_TENANT_ID` não é o GUID do tenant do Inatel, ou o app foi registrado como *single tenant* em outro tenant |
-| `AADSTS500113` / redirect inválido | O redirect URI `inatelinos://auth` não foi cadastrado na plataforma *Mobile and desktop applications* do registro no Azure |
-| Navegador abre e volta sem logar | Rodando no Expo Go — use `npx expo run:android` (passo 6) |
+| `auth/operation-not-allowed` ao cadastrar | O provedor Email/Password não foi habilitado (passo 3.2) |
+| E-mail de confirmação não chega | Confira spam/lixo eletrônico; aguarde alguns minutos; use "Reenviar e-mail" |
+| "Já confirmei" diz que não confirmou | O link abre no navegador — confirme que apareceu a página "email verificado" do Firebase antes de voltar ao app |
+| `permission-denied` no Firestore após confirmar | As regras publicadas não são as de `src/services/firebase.rules`, ou o token ainda não renovou — toque em "Já confirmei" novamente |
 | Aviso "Configuração do Firebase ausente" no terminal | `.env` não existe ou o Expo não foi reiniciado após criá-lo (`npx expo start -c`) |
+| Muitos reenvios → `auth/too-many-requests` | Limite anti-abuso do Firebase; aguarde alguns minutos |
 
-## Limitações conhecidas (herdadas do projeto original)
+## Limitações conhecidas
 
-- A unicidade do nome de usuário não é verificada na criação do perfil.
+- A unicidade do nome de usuário não é verificada na criação do perfil
+  (herdado do projeto original).
 - O documento do usuário usa o e-mail como ID no Firestore.
 - A foto de perfil inicial é gerada com as iniciais do nome via
   [ui-avatars.com](https://ui-avatars.com) (pode ser trocada em *Editar perfil*).
+- Qualquer pessoa pode *tentar* se cadastrar com um e-mail do Inatel que não
+  é dela, mas a conta fica inutilizável: sem abrir o link de confirmação (que
+  chega apenas na caixa de entrada verdadeira) nada é liberado.
+
+---
+
+## Opcional: login Microsoft (para o futuro)
+
+Quando quiser ativar o login integrado com a conta Microsoft institucional
+(valida a conta direto no Microsoft 365 do Inatel, sem senha própria):
+
+1. Registre um aplicativo no [portal.azure.com](https://portal.azure.com)
+   (Microsoft Entra ID → App registrations) com redirect URI
+   `inatelinos://auth` na plataforma *Mobile and desktop applications*.
+2. Descubra o Tenant ID do Inatel em
+   `https://login.microsoftonline.com/inatel.br/v2.0/.well-known/openid-configuration`
+   (GUID no campo `issuer`).
+3. No Firebase, em *Authentication → Sign-in method*, adicione um provedor
+   **OpenID Connect** (response type `ID token`) com ID `oidc.microsoft`,
+   o Client ID do Azure e o Issuer
+   `https://login.microsoftonline.com/<TENANT_ID>/v2.0`.
+4. Preencha `EXPO_PUBLIC_AZURE_CLIENT_ID` e `EXPO_PUBLIC_AZURE_TENANT_ID`
+   no `.env`.
+5. Reative o componente na tela de login: importe e renderize
+   `MicrosoftLogin` (de `src/components/login/MicrosoftLogin.jsx`) em
+   `src/screens/Login.jsx`.
+
+Detalhe: esse fluxo usa o scheme nativo `inatelinos://` e não funciona no
+Expo Go — apenas em development build (`npx expo run:android`).

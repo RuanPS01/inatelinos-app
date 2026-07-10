@@ -29,4 +29,7 @@ export const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage),
 });
 
+// E-mails do Firebase (confirmação de conta, redefinição de senha) em pt-BR.
+auth.languageCode = "pt";
+
 export const db = getFirestore(app);

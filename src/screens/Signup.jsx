@@ -6,14 +6,14 @@ import {
   TouchableWithoutFeedback,
   Platform,
 } from "react-native";
-import LoginForm from "../components/login/LoginForm";
-import Footer from "../components/login/Footer";
+import SignupForm from "../components/signup/SignupForm";
+import Footer from "../components/signup/Footer";
 import { Image } from "expo-image";
+import { SIZES, COLORS } from "../constants";
 import AvoidKeyboardView from "../components/shared/AvoidKeyboardView";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { COLORS } from "../constants";
 
-const LoginScreen = ({ navigation }) => {
+const Signup = ({ navigation }) => {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -24,6 +24,7 @@ const LoginScreen = ({ navigation }) => {
           style={{ flex: 1 }}
         >
           <View style={styles.mainContainer}>
+            <View style={{ height: 56 }} />
             <View>
               <View style={styles.logoContainer}>
                 <Image
@@ -33,10 +34,10 @@ const LoginScreen = ({ navigation }) => {
                 />
               </View>
               <Text style={styles.tagline}>
-                A rede social de alunos e ex-alunos do Inatel
+                Crie sua conta com o e-mail do Inatel
               </Text>
 
-              <LoginForm navigation={navigation} />
+              <SignupForm />
             </View>
           </View>
         </AvoidKeyboardView>
@@ -46,25 +47,28 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
-export default LoginScreen;
+export default Signup;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
+    paddingHorizontal: 20,
     alignContent: "space-between",
+    paddingTop: 0,
   },
   mainContainer: {
     flex: 1,
     justifyContent: "center",
     marginHorizontal: 16,
+    marginTop: -SIZES.Width * 0.15,
   },
   logoContainer: {
     alignItems: "center",
   },
   logo: {
-    height: Platform.OS === "android" ? 75 : 65,
-    width: 210,
+    height: Platform.OS === "android" ? 70 : 60,
+    width: 200,
   },
   tagline: {
     color: COLORS.textSecondary,

@@ -8,7 +8,8 @@ service firebase.storage {
     function userIsInatelino() {
       return request.auth != null
         && request.auth.token.email is string
-        && request.auth.token.email.matches('[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+[.])*inatel[.]br');
+        && request.auth.token.email.matches('[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+[.])*inatel[.]br')
+        && request.auth.token.email_verified == true;
     }
 
     match /{userId}/{imageId} {

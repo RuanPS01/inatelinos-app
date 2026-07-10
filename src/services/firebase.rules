@@ -2,7 +2,8 @@
 // Console → Firestore Database → Rules.
 //
 // Além de exigir autenticação, as regras garantem no servidor que apenas
-// contas com e-mail @inatel.br (ou @sigla.inatel.br) acessem os dados.
+// contas com e-mail @inatel.br (ou @sigla.inatel.br) JÁ CONFIRMADO pelo
+// link de verificação acessem os dados.
 
 rules_version = '2';
 
@@ -12,7 +13,8 @@ service cloud.firestore {
     function userIsInatelino() {
       return request.auth != null
         && request.auth.token.email is string
-        && request.auth.token.email.matches('[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+[.])*inatel[.]br');
+        && request.auth.token.email.matches('[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+[.])*inatel[.]br')
+        && request.auth.token.email_verified == true;
     }
 
     match /{path=**}/posts/{postId} {
