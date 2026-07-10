@@ -11,7 +11,7 @@ const useReportAction = (firebaseApp) => {
       });
       Alert.alert(
         "Thanks for reporting this",
-        "We'll review the ad to determine whether it violates our Ad policies. Thanks for helping us keep Instagram safe."
+        "We'll review the ad to determine whether it violates our Ad policies. Thanks for helping us keep Inatelinos safe."
       );
     } catch (error) {
       console.error("Error reporting post:", error);
@@ -26,7 +26,7 @@ const useReportAction = (firebaseApp) => {
       });
       Alert.alert(
         "Thanks for reporting this",
-        "We'll review the ad to determine whether it violates our Ad policies. Thanks for helping us keep Instagram safe."
+        "We'll review the ad to determine whether it violates our Ad policies. Thanks for helping us keep Inatelinos safe."
       );
     } catch (error) {
       console.error("Error reporting user:", error);

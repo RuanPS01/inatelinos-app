@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   nextButton: {
-    color: "#08f",
+    color: "#1E60AD",
     fontWeight: "800",
     fontSize: 16,
   },

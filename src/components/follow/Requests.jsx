@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   blueButton: {
-    backgroundColor: "#07f",
+    backgroundColor: "#1E60AD",
     justifyContent: "center",
     alignItems: "center",
     height: 34,

@@ -3,14 +3,25 @@ import { initializeApp } from "firebase/app";
 import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
+// Credenciais do SEU projeto Firebase (veja .env.example e SETUP.md).
+// O login com Microsoft exige um projeto próprio, pois o provedor OIDC
+// precisa ser configurado no console do Firebase.
 const firebaseConfig = {
-  apiKey: "AIzaSyC61M-mcCdlkudNOvqtpMNO6XU28Ds3Tng",
-  authDomain: "instagram-clone-app-3f538.firebaseapp.com",
-  projectId: "instagram-clone-app-3f538",
-  storageBucket: "instagram-clone-app-3f538.appspot.com",
-  messagingSenderId: "923663435657",
-  appId: "1:923663435657:web:55648541fad8fbcfd30358",
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
+
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  console.warn(
+    "⚠️ Configuração do Firebase ausente. Copie .env.example para .env, " +
+      "preencha as variáveis EXPO_PUBLIC_FIREBASE_* e reinicie o Expo " +
+      "(veja SETUP.md)."
+  );
+}
 
 const app = initializeApp(firebaseConfig);
 

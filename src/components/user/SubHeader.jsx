@@ -54,7 +54,7 @@ const SubHeader = ({ user, navigation, numberOfPosts }) => {
               <LinearGradient
                 start={[0.9, 0.45]}
                 end={[0.07, 1.03]}
-                colors={["#ff00ff", "#ff4400", "#ffff00"]}
+                colors={["#1E60AD", "#4581C4", "#7FD4FF"]}
                 style={styles.unseenRainbowBorder}
               >
                 <Image
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   },
   btnWrapperBlue: {
     flexDirection: "row",
-    backgroundColor: "#07f",
+    backgroundColor: "#1E60AD",
     borderRadius: 10,
     flex: 1,
     alignItems: "center",

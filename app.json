@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "instagram-clone-app",
-    "slug": "instagram-clone-app",
+    "name": "Inatelinos",
+    "slug": "inatelinos-app",
+    "scheme": "inatelinos",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -16,20 +17,20 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hernanhawryluk.instagramcloneapp",
+      "bundleIdentifier": "br.inatel.inatelinos",
       "backgroundColor": "#000000"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#000000"
+        "backgroundColor": "#1E60AD"
       },
       "permissions": [
         "CAMERA",
         "READ_MEDIA_IMAGES",
         "READ_MEDIA_VIDEO"
       ],
-      "package": "com.hernanhawryluk.instagramcloneapp"
+      "package": "br.inatel.inatelinos"
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -65,7 +65,7 @@ const Gender = ({ navigation }) => {
             onPress={() => isValid && handleSubmitGender(values)}
           >
             <Text
-              style={[styles.doneBtn, { color: isValid ? "#09f" : "#333" }]}
+              style={[styles.doneBtn, { color: isValid ? "#4581C4" : "#333" }]}
             >
               Done
             </Text>
@@ -93,7 +93,7 @@ const Gender = ({ navigation }) => {
                       style={[
                         styles.roundBtnInterior,
                         values[0] === option && {
-                          backgroundColor: "#09f",
+                          backgroundColor: "#4581C4",
                         },
                       ]}
                     >
@@ -133,7 +133,7 @@ const Gender = ({ navigation }) => {
                     style={[
                       styles.roundBtnInterior,
                       values[0] === option && {
-                        backgroundColor: "#09f",
+                        backgroundColor: "#4581C4",
                       },
                     ]}
                   >

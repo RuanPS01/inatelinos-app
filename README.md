@@ -1,114 +1,80 @@
-# instagram-clone-app
+# Inatelinos 📡
 
-<img alt="Instagram Logo" src="./assets/images/header-logo.png" width="60%">
+A rede social exclusiva de alunos e ex-alunos do **Inatel** — Instituto
+Nacional de Telecomunicações. Feed, stories, reels, chat e tudo que se espera
+de uma rede social moderna, restrita à comunidade inatelina.
 
-<div>
-<h4>Language options</h4>
-  <a href="https://github.com/hernanhawryluk/instagram-clone-app/blob/main/README.es.md"><img alt="Cambiar idioma al español" src="https://img.shields.io/badge/idioma-español-yellow.svg"></a>
-  <a href="#"><img alt="Visitor Badge" src="https://visitor-badge.laobi.icu/badge?page_id=hernanhawryluk.instagram-clone-app"></a>
-</div>
-<div>
-  <h3>Technologies used</h3>
-  <a href="#"><img alt="React Native" src="https://img.shields.io/badge/React%20Native-0.79.2-blue?logo=react"></a>
-    <a href="#"><img alt="Expo" src="https://img.shields.io/badge/Expo-53.0.5-blue?logo=expo"></a>
-    <a href="#"><img alt="Firebase" src="https://img.shields.io/badge/Firebase-11.9.1-blue?logo=firebase"></a>
-</div>
+Construído com **React Native + Expo** e **Firebase**, com login integrado à
+conta **Microsoft institucional** (`@inatel.br` / `@sigla.inatel.br`).
 
-## Description
+## Acesso exclusivo Inatel 🔐
 
-A functional Instagram clone developed in React Native. This project allows you to explore how some of its main features are implemented. It is compatible with Expo Go and requires no additional configuration or development build. Discover and experience Instagram’s features and functionality in this application.
+- Login **apenas** com a conta Microsoft do Inatel (Microsoft Entra ID /
+  Office 365), via OAuth 2.0 com PKCE.
+- A existência e o funcionamento do e-mail são validados pela própria
+  Microsoft; o usuário confirma a conta detectada antes de entrar.
+- Aceita `@inatel.br` e variações `@sigla.inatel.br` (qualquer sigla de curso
+  que o Inatel venha a criar).
+- A restrição de domínio também é aplicada **no servidor**, pelas regras do
+  Firestore e do Storage.
 
-While the front-end is fully functional and allows interaction with the app similar to Instagram, the back-end is implemented solely with Firebase as a prototype. This means that security and the handling of sensitive data are not optimized for production environments, so it is recommended to use it only for educational and experimental purposes.
+## Identidade visual 🎨
 
-⚠️ Android: Due to permission restrictions in Expo Go, the gallery access functionality using expo-media-library is not available. To use this feature on Android, you must create a development build with EAS.
+A paleta deriva do azul institucional do Inatel **`#1E60AD`**
+(definida em [`src/constants/COLORS.js`](src/constants/COLORS.js)):
 
-## Features
+| Papel | Cor |
+|---|---|
+| Primária (azul Inatel) | `#1E60AD` |
+| Escuro / pressionado | `#154379` |
+| Acento (ícones ativos) | `#4581C4` |
+| Links | `#6FA3D9` |
+| Realce (anel de stories) | `#7FD4FF` |
+| Escala completa | `#E8F0F9` → `#0B2440` |
 
-- User authentication.
-- Discover, search, and share content and users.
-- Create, edit, and share posts, stories, and reels.
-- Easy image uploads from your device or camera.
-- Social interaction: like, comment, and follow other users.
-- Personalized user profiles with information and a list of posts.
-- Real-time notifications and chat to keep you connected.
+O logotipo é a **antena transmitindo**: a moldura arredondada de um app de
+fotos com ondas de transmissão no centro — e, no wordmark, o pingo do primeiro
+"i" de *inatelinos* vira a antena.
 
-## Technologies Used
+## Funcionalidades 🚀
 
-- Expo.
-- React Native.
-- Firebase (authentication, data base and cloud storage).
+Inspiradas no funcionamento do Instagram:
 
-## Download the App for Android devices
+- Feed de posts com curtidas, comentários e salvos
+- Stories (com anel azul Inatel) e destaques
+- Reels com vídeo
+- Chat entre inatelinos
+- Perfil com seguidores/seguindo, solicitações e edição completa
+- Busca de usuários e explorar
+- Notificações de interações
+- Compartilhamento de perfil com QR code
 
-- [![Download APK for Android](https://img.shields.io/badge/Google%20Drive-instagram--clone--app.apk-blue?logo=googledrive)](https://drive.google.com/file/d/15ahphglkz-yoSmbGTq201YoZ-xWay-pn/view?usp=drive_link)
+## Tecnologias 💻
 
-## Video of the App running on iOS:
+- React Native 0.79 + Expo SDK 53
+- Firebase Authentication (provedor OpenID Connect → Microsoft Entra ID)
+- Cloud Firestore + Firebase Storage
+- expo-auth-session (OAuth 2.0 + PKCE), expo-crypto
+- React Navigation, Reanimated, Gesture Handler, Bottom Sheet
 
-- [![YouTube Video](https://img.shields.io/badge/YouTube-instagram--clone--app-d22?logo=youtube&logoColor=d22)](https://youtu.be/llQH79EdmfU)
+## Como rodar 🛠️
 
-## Instructions for Running on an Emulator:
-
-### Requirements:
-
-    - Node.js.
-    -	Optional: Xcode (for iOS emulator).
-    -	Optional: Android Studio (for Android emulator).
-    -	Optional: Mobile device with the Expo Go app installed.
-
-### Instructions:
-
-1. **Download the repository**
-
-```bash
-git clone https://github.com/hernanhawryluk/instagram-clone-app
-```
-
-2. **Navigate to the project directory**
-
-```bash
-cd instagram-clone-app
-```
-
-3. **Install dependencies**
+O passo a passo completo de configuração (Firebase, registro do app no Azure,
+variáveis de ambiente e build) está no **[SETUP.md](SETUP.md)**. Resumo:
 
 ```bash
 npm install
+cp .env.example .env   # preencha com suas credenciais (ver SETUP.md)
+npx expo prebuild --clean
+npx expo run:android   # ou npx expo run:ios
 ```
 
-4. **Start the application**
+> ⚠️ O login Microsoft usa o scheme nativo `inatelinos://` e não funciona no
+> Expo Go — use um development build como acima.
 
-```bash
-npm start
-```
+## Créditos
 
-5. **Select the emulator**
-
-   - Press “i” to open in the iOS emulator.
-   - Press “a” to open in the Android emulator.
-   - Scan the QR code with a mobile device to open in the Expo Go app.
-
-## Screenshots
-
-<div>
-  <img src="./assets/screenshots/LoginScreen.png" width="32%">
-  <img src="./assets/screenshots/HomeScreen.png" width="32%">
-  <img src="./assets/screenshots/PostsScreen.png" width="32%">
-  <img src="./assets/screenshots/SearchScreen.png" width="32%">
-  <img src="./assets/screenshots/NewPostScreen.png" width="32%">
-  <img src="./assets/screenshots/NewStoryScreen.png" width="32%">
-  <img src="./assets/screenshots/ReelsScreen.png" width="32%">
-  <img src="./assets/screenshots/ProfileScreen.png" width="32%">
-  <img src="./assets/screenshots/ShareQRModal.png" width="32%">
-  <img src="./assets/screenshots/DetailScreen.png" width="32%">
-  <img src="./assets/screenshots/CommentsModal.png" width="32%">
-  <img src="./assets/screenshots/FollowersScreen.png" width="32%">
-  <img src="./assets/screenshots/OptionsModal.png" width="32%">
-  <img src="./assets/screenshots/PictureModal.png" width="32%">
-</div>
-
-## Where to find me?
-
-<div>
-  <a href="https://github.com/hernanhawryluk"><img alt="GitHub" src="https://img.shields.io/badge/GitHub-grey?style=for-the-badge&logo=github"></a>
-  <a href="https://www.linkedin.com/in/hernan-hawryluk"><img alt="GitHub" src="https://img.shields.io/badge/LinkedIn-blue?style=for-the-badge&logo=linkedin"></a>
-</div>
+Baseado no projeto open source
+[instagram-clone-app](https://github.com/hernanhawryluk/instagram-clone-app)
+de Hernan Hawryluk (licença MIT), redesenhado e adaptado para a comunidade do
+Inatel.
