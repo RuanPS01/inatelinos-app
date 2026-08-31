@@ -1,15 +1,15 @@
 import {
   StyleSheet,
+  Text,
   View,
   Keyboard,
   TouchableWithoutFeedback,
-  Animated,
   Platform,
 } from "react-native";
 import SignupForm from "../components/signup/SignupForm";
 import Footer from "../components/signup/Footer";
 import { Image } from "expo-image";
-import { SIZES } from "../constants";
+import { SIZES, COLORS } from "../constants";
 import AvoidKeyboardView from "../components/shared/AvoidKeyboardView";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -26,14 +26,18 @@ const Signup = ({ navigation }) => {
           <View style={styles.mainContainer}>
             <View style={{ height: 56 }} />
             <View>
-              <Animated.View style={styles.logoContainer}>
+              <View style={styles.logoContainer}>
                 <Image
                   source={require("../../assets/images/header-logo.png")}
                   style={styles.logo}
+                  contentFit="contain"
                 />
-              </Animated.View>
+              </View>
+              <Text style={styles.tagline}>
+                Crie sua conta com o e-mail do Inatel
+              </Text>
 
-              <SignupForm navigation={navigation} />
+              <SignupForm />
             </View>
           </View>
         </AvoidKeyboardView>
@@ -65,6 +69,11 @@ const styles = StyleSheet.create({
   logo: {
     height: Platform.OS === "android" ? 70 : 60,
     width: 200,
-    contentFit: "cover",
+  },
+  tagline: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: 10,
   },
 });

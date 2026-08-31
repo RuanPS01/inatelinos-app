@@ -1,30 +1,19 @@
 import {
   StyleSheet,
+  Text,
   View,
   Keyboard,
   TouchableWithoutFeedback,
-  Animated,
   Platform,
 } from "react-native";
-import { useEffect, useState } from "react";
 import LoginForm from "../components/login/LoginForm";
 import Footer from "../components/login/Footer";
 import { Image } from "expo-image";
 import AvoidKeyboardView from "../components/shared/AvoidKeyboardView";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { COLORS } from "../constants";
 
 const LoginScreen = ({ navigation }) => {
-  const [messageModalVisible, setMessageModalVisible] = useState(false);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setMessageModalVisible(true);
-    }, 500);
-    setTimeout(() => {
-      setMessageModalVisible(false);
-    }, 3500);
-  }, []);
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -36,12 +25,16 @@ const LoginScreen = ({ navigation }) => {
         >
           <View style={styles.mainContainer}>
             <View>
-              <Animated.View style={styles.logoContainer}>
+              <View style={styles.logoContainer}>
                 <Image
                   source={require("../../assets/images/header-logo.png")}
                   style={styles.logo}
+                  contentFit="contain"
                 />
-              </Animated.View>
+              </View>
+              <Text style={styles.tagline}>
+                A rede social de alunos e ex-alunos do Inatel
+              </Text>
 
               <LoginForm navigation={navigation} />
             </View>
@@ -70,8 +63,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-    height: Platform.OS === "android" ? 70 : 60,
-    width: 200,
-    contentFit: "cover",
+    height: Platform.OS === "android" ? 75 : 65,
+    width: 210,
+  },
+  tagline: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    textAlign: "center",
+    marginTop: 10,
   },
 });

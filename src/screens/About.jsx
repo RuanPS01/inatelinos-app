@@ -27,7 +27,7 @@ const About = ({ navigation, route }) => {
         <Text style={styles.username}>{user.username}</Text>
         <Text style={styles.smallText}>
           To help keep our community authentic, we're showing information about
-          accounts on Instagram.
+          accounts on Inatelinos.
         </Text>
         <TouchableOpacity>
           <Text style={styles.linkText}>
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   linkText: {
-    color: "#def",
+    color: "#C6DBF1",
     fontSize: 13,
     fontWeight: "400",
   },

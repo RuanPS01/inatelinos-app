@@ -10,16 +10,17 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import useIsEmail from "../utils/useIsEmail";
+import isInatelEmail from "../utils/isInatelEmail";
 import useResetPassword from "../hooks/useResetPassword";
 import AvoidKeyboardView from "../components/shared/AvoidKeyboardView";
+import MessageModal from "../components/shared/modals/MessageModal";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { COLORS } from "../constants";
 
 const Forgot = ({ navigation }) => {
-  const { value, setValue, resetPassword, loader } = useResetPassword({
+  const { value, setValue, resetPassword, loader, message } = useResetPassword({
     navigation,
   });
-  const { isEmail } = useIsEmail();
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
@@ -33,10 +34,10 @@ const Forgot = ({ navigation }) => {
           <View style={styles.iconContainer}>
             <Ionicons name="lock-closed-outline" size={60} color="#fff" />
           </View>
-          <Text style={styles.titleText}>Trouble logging in?</Text>
+          <Text style={styles.titleText}>Problemas para entrar?</Text>
           <Text style={styles.normalText}>
-            Enter your email and we'll send you a link to get back into your
-            account.
+            Digite seu e-mail do Inatel e enviaremos um link para você voltar
+            a acessar sua conta.
           </Text>
           <View style={styles.rowContainer}></View>
 
@@ -44,7 +45,7 @@ const Forgot = ({ navigation }) => {
             <TextInput
               style={styles.textInput}
               placeholderTextColor={"#bbb"}
-              placeholder="Email"
+              placeholder="E-mail do Inatel"
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
@@ -57,13 +58,13 @@ const Forgot = ({ navigation }) => {
             onPress={() => resetPassword()}
             style={[
               styles.buttonWrapper,
-              { opacity: isEmail(value) ? 1 : 0.6 },
+              { opacity: isInatelEmail(value) ? 1 : 0.6 },
             ]}
           >
             {loader ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.buttonText}>Next</Text>
+              <Text style={styles.buttonText}>Avançar</Text>
             )}
           </TouchableOpacity>
         </AvoidKeyboardView>
@@ -73,9 +74,16 @@ const Forgot = ({ navigation }) => {
             style={styles.footerTextContainer}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.footerText}>Back to log in</Text>
+            <Text style={styles.footerText}>Voltar para o login</Text>
           </TouchableOpacity>
         </View>
+
+        <MessageModal
+          messageModalVisible={Boolean(message)}
+          message={message?.text}
+          height={70}
+          icon={message?.type === "ok" ? "developer" : "wrong"}
+        />
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );
@@ -87,7 +95,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000",
-    Platform: 0,
   },
   mainContainer: {
     flex: 1,
@@ -122,17 +129,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
   },
-  selectionText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
-  divider: {
-    width: "80%",
-    height: 1,
-    backgroundColor: "#fff",
-  },
   textInputWrapper: {
     marginTop: 15,
     backgroundColor: "#111",
@@ -155,11 +151,10 @@ const styles = StyleSheet.create({
   buttonWrapper: {
     marginTop: 28,
     alignItems: "center",
-    backgroundColor: "#07f",
+    backgroundColor: COLORS.primary,
     width: "100%",
     height: Platform.OS === "android" ? 56 : 54,
     justifyContent: "center",
-    alignItems: "center",
     borderRadius: 10,
     marginBottom: 70,
   },
@@ -185,7 +180,7 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "android" ? 5 : 0,
   },
   footerText: {
-    color: "#0af",
+    color: COLORS.link,
     fontSize: 13,
     fontWeight: "700",
     textAlign: "center",

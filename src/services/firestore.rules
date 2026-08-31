@@ -1,16 +1,19 @@
-// copy this "rules" to your "Firebase Storage Rules" project.
+// Copie estas regras para o seu projeto no Firebase:
+// Console → Storage → Rules.
 
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
-    function userIsAuthenticated() {
-      return request.auth != null;
+    function userIsInatelino() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email.matches('[A-Za-z0-9._%+-]+@([A-Za-z0-9-]+[.])*inatel[.]br')
+        && request.auth.token.email_verified == true;
     }
 
     match /{userId}/{imageId} {
-      allow read, write: if userIsAuthenticated();
+      allow read, write: if userIsInatelino();
     }
   }
 }
-

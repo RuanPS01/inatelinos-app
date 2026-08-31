@@ -41,7 +41,7 @@ const EditPost = ({ navigation, route }) => {
               style={[
                 styles.optionTitle,
                 {
-                  color: value.length > 0 ? "#08f" : "#fff",
+                  color: value.length > 0 ? "#1E60AD" : "#fff",
                   fontWeight: value.length > 0 ? "700" : "500",
                 },
               ]}

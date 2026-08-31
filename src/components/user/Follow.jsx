@@ -42,7 +42,7 @@ const Follow = ({ user, currentUser, navigation }) => {
             <LinearGradient
               start={[0.9, 0.45]}
               end={[0.07, 1.03]}
-              colors={["#ff00ff", "#ff4400", "#ffff00"]}
+              colors={["#1E60AD", "#4581C4", "#7FD4FF"]}
               style={styles.rainbowBorder}
             >
               <Image
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   blueButton: {
-    backgroundColor: "#08f",
+    backgroundColor: "#1E60AD",
     justifyContent: "center",
     alignItems: "center",
     height: Platform.OS === "android" ? 32 : 30,

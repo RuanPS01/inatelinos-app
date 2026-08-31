@@ -56,7 +56,7 @@ const Name = ({ navigation }) => {
               onPress={() => isValid && handleSubmitName(values)}
             >
               <Text
-                style={[styles.doneBtn, { color: isValid ? "#09f" : "#333" }]}
+                style={[styles.doneBtn, { color: isValid ? "#4581C4" : "#333" }]}
               >
                 Done
               </Text>

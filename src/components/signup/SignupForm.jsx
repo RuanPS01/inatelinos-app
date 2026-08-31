@@ -4,99 +4,84 @@ import {
   View,
   TextInput,
   TouchableOpacity,
+  Keyboard,
   Platform,
   ActivityIndicator,
 } from "react-native";
-import { useState, useEffect } from "react";
-import { Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
+import { useState } from "react";
+import { MaterialCommunityIcons, Octicons, Ionicons } from "@expo/vector-icons";
 import { Formik } from "formik";
 import * as Yup from "yup";
-import Validator from "email-validator";
-import { getLocales } from "expo-localization";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
-import { auth, db } from "../../services/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import MessageModal from "../shared/modals/MessageModal";
+import { auth } from "../../services/firebase";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
+import isInatelEmail from "../../utils/isInatelEmail";
+import { COLORS } from "../../constants";
 
-const SignupForm = ({ navigation }) => {
-  const [userOnFocus, setUserOnFocus] = useState(false);
-  const [emailOnFocus, setEmailOnFocus] = useState(false);
-  const [emailToValidate, SetEmailToValidate] = useState(false);
-  const [userToValidate, setUserToValidate] = useState(false);
+const SignupFormSchema = Yup.object().shape({
+  email: Yup.string()
+    .required()
+    .test("inatel", "E-mail fora do domínio Inatel", isInatelEmail),
+  password: Yup.string().required().min(6),
+  confirmPassword: Yup.string()
+    .required()
+    .oneOf([Yup.ref("password")], "As senhas não coincidem"),
+});
+
+// Cria a conta com o e-mail institucional e dispara o link de confirmação.
+// O nome de usuário é escolhido depois da verificação (tela de primeiro
+// acesso), pois as regras do Firestore só permitem criar o perfil com o
+// e-mail já confirmado.
+const SignupForm = () => {
   const [obsecureText, setObsecureText] = useState(true);
-  const [passwordToValidate, SetPasswordToValidate] = useState(false);
-  const [country, setCountry] = useState(null);
-  const [developerMessage, setDeveloperMessage] = useState(false);
+  const [emailOnFocus, setEmailOnFocus] = useState(false);
+  const [emailToValidate, setEmailToValidate] = useState(false);
+  const [passwordToValidate, setPasswordToValidate] = useState(false);
+  const [confirmToValidate, setConfirmToValidate] = useState(false);
+  const [messageModalVisible, setMessageModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [loader, setLoader] = useState(false);
 
-  useEffect(() => {
-    const locales = getLocales();
-    setCountry(locales[0].regionCode || "Argentina");
-
+  const handleDataError = (message) => {
+    setErrorMessage(message);
+    setMessageModalVisible(true);
     setTimeout(() => {
-      setDeveloperMessage(true);
-    }, 2000);
-    setTimeout(() => {
-      setDeveloperMessage(false);
-    }, 12000);
-  }, []);
-
-  const LoginFormSchema = Yup.object().shape({
-    username: Yup.string()
-      .required()
-      .min(6, "Username has to have al least 8 characters"),
-    email: Yup.string()
-      .required()
-      .min(6, "A valid phone number, username or email address is required"),
-    password: Yup.string()
-      .required()
-      .min(6, "Your password has to have at least 6 characters"),
-  });
-
-  const getRandomProfilePicture = async () => {
-    const response = await fetch("https://randomuser.me/api");
-    const data = await response.json();
-    return data.results[0].picture.large;
+      setMessageModalVisible(false);
+    }, 3500);
   };
 
-  const onSignup = async (email, username, password, country) => {
+  const onSignup = async (email, password) => {
+    Keyboard.dismiss();
+    const cleanEmail = email.trim().toLowerCase();
+    if (!isInatelEmail(cleanEmail)) {
+      handleDataError(
+        "O Inatelinos é exclusivo para e-mails @inatel.br ou @sigla.inatel.br."
+      );
+      return;
+    }
     try {
       setLoader(true);
       const userCredentials = await createUserWithEmailAndPassword(
         auth,
-        email,
+        cleanEmail,
         password
       );
-
-      await setDoc(doc(db, "users", userCredentials.user.email), {
-        owner_uid: userCredentials.user.uid,
-        username: username,
-        email: userCredentials.user.email,
-        profile_picture: await getRandomProfilePicture(),
-        name: username,
-        bio: "",
-        link: "",
-        gender: ["Prefer not to say", ""],
-        followers: [],
-        following: [],
-        followers_request: [],
-        following_request: [],
-        event_notification: 0,
-        chat_notification: 0,
-        saved_posts: [],
-        close_friends: [],
-        favorite_users: [],
-        muted_users: [],
-        createdAt: serverTimestamp(),
-        country: country,
-      });
-
-      console.log(
-        "🔥 Firebase User Created Successful ✅",
-        userCredentials.user.email
-      );
+      await sendEmailVerification(userCredentials.user);
+      // O AuthNavigation direciona para a tela de confirmação de e-mail.
     } catch (error) {
-      console.log(error.message);
+      console.log(error.code);
+      if (error.code === "auth/email-already-in-use") {
+        handleDataError("Este e-mail já possui uma conta. Faça login.");
+      } else if (error.code === "auth/weak-password") {
+        handleDataError("Senha fraca: use pelo menos 6 caracteres.");
+      } else if (error.code === "auth/invalid-email") {
+        handleDataError("E-mail inválido. Verifique o que foi digitado.");
+      } else {
+        handleDataError("Não foi possível criar a conta. Tente novamente.");
+      }
     } finally {
       setLoader(false);
     }
@@ -105,11 +90,11 @@ const SignupForm = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Formik
-        initialValues={{ email: "", username: "", password: "" }}
+        initialValues={{ email: "", password: "", confirmPassword: "" }}
         onSubmit={(values) => {
-          onSignup(values.email, values.username, values.password, country);
+          onSignup(values.email, values.password);
         }}
-        validationSchema={LoginFormSchema}
+        validationSchema={SignupFormSchema}
         validateOnMount={true}
       >
         {({ handleChange, handleBlur, handleSubmit, values, isValid }) => (
@@ -119,7 +104,7 @@ const SignupForm = ({ navigation }) => {
                 styles.inputField,
                 {
                   borderColor:
-                    emailToValidate && !Validator.validate(values.email)
+                    emailToValidate && !isInatelEmail(values.email)
                       ? "#f00"
                       : "#444",
                 },
@@ -127,8 +112,8 @@ const SignupForm = ({ navigation }) => {
             >
               <TextInput
                 style={styles.inputText}
-                placeholderTextColor={"#BBB"}
-                placeholder="Email"
+                placeholderTextColor={"#bbb"}
+                placeholder="E-mail do Inatel"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -137,9 +122,7 @@ const SignupForm = ({ navigation }) => {
                 onBlur={() => {
                   handleBlur("email");
                   setEmailOnFocus(false);
-                  values.email.length > 0
-                    ? SetEmailToValidate(true)
-                    : SetEmailToValidate(false);
+                  setEmailToValidate(values.email.length > 0);
                 }}
                 onFocus={() => setEmailOnFocus(true)}
                 value={values.email}
@@ -152,51 +135,20 @@ const SignupForm = ({ navigation }) => {
                 />
               </TouchableOpacity>
             </View>
+            {emailToValidate &&
+              values.email.length > 0 &&
+              !isInatelEmail(values.email) && (
+                <Text style={styles.fieldError}>
+                  Somente e-mails @inatel.br ou @sigla.inatel.br
+                </Text>
+              )}
 
             <View
               style={[
                 styles.inputField,
                 {
                   borderColor:
-                    userToValidate && values.username.length < 6
-                      ? "#f00"
-                      : "#444",
-                },
-              ]}
-            >
-              <TextInput
-                style={styles.inputText}
-                placeholderTextColor={"#BBB"}
-                placeholder="Username"
-                autoCapitalize="none"
-                autoCorrect={false}
-                textContentType="username"
-                onChangeText={handleChange("username")}
-                onBlur={() => {
-                  handleBlur("username");
-                  setUserOnFocus(false);
-                  values.username.length > 0
-                    ? setUserToValidate(true)
-                    : setUserToValidate(false);
-                }}
-                onFocus={() => setUserOnFocus(true)}
-                value={values.username}
-              />
-              <TouchableOpacity onPress={() => handleChange("username")("")}>
-                <Octicons
-                  name={userOnFocus ? "x-circle-fill" : ""}
-                  size={15}
-                  color={"#555"}
-                />
-              </TouchableOpacity>
-            </View>
-
-            <View
-              style={[
-                styles.inputField,
-                {
-                  borderColor:
-                    passwordToValidate && values.password.length < 5
+                    passwordToValidate && values.password.length < 6
                       ? "#f00"
                       : "#444",
                 },
@@ -205,17 +157,15 @@ const SignupForm = ({ navigation }) => {
               <TextInput
                 style={styles.inputText}
                 placeholderTextColor={"#bbb"}
-                placeholder="Password"
+                placeholder="Senha (mínimo 6 caracteres)"
                 autoCapitalize="none"
                 autoCorrect={false}
                 secureTextEntry={obsecureText}
-                textContentType="password"
+                textContentType="newPassword"
                 onChangeText={handleChange("password")}
                 onBlur={() => {
                   handleBlur("password");
-                  values.password.length > 0
-                    ? SetPasswordToValidate(true)
-                    : SetPasswordToValidate(false);
+                  setPasswordToValidate(values.password.length > 0);
                 }}
                 value={values.password}
               />
@@ -223,41 +173,67 @@ const SignupForm = ({ navigation }) => {
                 <MaterialCommunityIcons
                   name={obsecureText ? "eye-off" : "eye"}
                   size={24}
-                  color={obsecureText ? "#fff" : "#37e"}
+                  color={obsecureText ? "#fff" : COLORS.accent}
                 />
               </TouchableOpacity>
             </View>
-            <View style={styles.forgotContainer}>
-              <TouchableOpacity onPress={() => navigation.navigate("Forgot")}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
-              </TouchableOpacity>
+
+            <View
+              style={[
+                styles.inputField,
+                {
+                  borderColor:
+                    confirmToValidate &&
+                    values.confirmPassword !== values.password
+                      ? "#f00"
+                      : "#444",
+                },
+              ]}
+            >
+              <TextInput
+                style={styles.inputText}
+                placeholderTextColor={"#bbb"}
+                placeholder="Confirmar senha"
+                autoCapitalize="none"
+                autoCorrect={false}
+                secureTextEntry={obsecureText}
+                textContentType="newPassword"
+                onChangeText={handleChange("confirmPassword")}
+                onBlur={() => {
+                  handleBlur("confirmPassword");
+                  setConfirmToValidate(values.confirmPassword.length > 0);
+                }}
+                value={values.confirmPassword}
+              />
             </View>
+
+            <View style={styles.infoContainer}>
+              <Ionicons name="mail-unread-outline" size={16} color={COLORS.link} />
+              <Text style={styles.infoText}>
+                Enviaremos um link de confirmação para o seu e-mail do Inatel.
+                A conta só é liberada após a confirmação.
+              </Text>
+            </View>
+
             <TouchableOpacity onPress={handleSubmit} disabled={!isValid}>
               <View style={styles.btnContainer(isValid)}>
                 {loader ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.btnText}>Sign up</Text>
+                  <Text style={styles.btnText}>Criar conta</Text>
                 )}
               </View>
             </TouchableOpacity>
-            <View style={{ height: 56 }}>
-              {developerMessage && (
-                <Animated.View
-                  style={styles.modalContainer}
-                  entering={FadeInDown.duration(1000)}
-                  exiting={FadeOutDown.duration(1000)}
-                >
-                  <Ionicons name={"logo-react"} size={24} color="#fff" />
-                  <Text style={styles.modalText}>
-                    Developed by Hernan Hawryluk
-                  </Text>
-                </Animated.View>
-              )}
-            </View>
           </View>
         )}
       </Formik>
+
+      <MessageModal
+        messageModalVisible={messageModalVisible}
+        message={errorMessage}
+        height={70}
+        icon="wrong"
+      />
     </View>
   );
 };
@@ -273,6 +249,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#111",
     borderRadius: 8,
     borderWidth: 1,
+    borderColor: "#444",
     paddingLeft: 15,
     paddingRight: 25,
     marginHorizontal: 20,
@@ -284,27 +261,33 @@ const styles = StyleSheet.create({
   inputText: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#FFF",
+    color: "#fff",
     width: "95%",
   },
-  forgotContainer: {
-    alignItems: "flex-end",
-    marginTop: 20,
-    marginRight: 20,
+  fieldError: {
+    color: "#f66",
+    fontSize: 12,
+    marginTop: 6,
+    marginHorizontal: 24,
   },
-  forgotText: {
-    color: "#1af",
-    fontWeight: "700",
+  infoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 18,
+    marginHorizontal: 24,
   },
-  loginBtn: {
-    backgroundColor: "#1af",
-    color: "#fff",
+  infoText: {
+    flex: 1,
+    color: "#bbb",
+    fontSize: 12,
+    lineHeight: 17,
   },
   btnContainer: (isValid) => ({
-    marginTop: 35,
+    marginTop: 25,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#07f",
+    backgroundColor: COLORS.primary,
     opacity: isValid ? 1 : 0.6,
     marginHorizontal: 20,
     height: Platform.OS === "android" ? 56 : 54,
@@ -314,29 +297,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "800",
-  },
-  modalContainer: {
-    marginTop: 14,
-    marginHorizontal: 20,
-    backgroundColor: "#333",
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 7,
-      height: 7,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    borderRadius: 10,
-    height: Platform.OS === "android" ? 56 : 54,
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  modalText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#fff",
-    marginBottom: Platform.OS === "android" ? 4 : 0,
   },
 });

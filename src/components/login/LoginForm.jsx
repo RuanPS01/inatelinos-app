@@ -8,33 +8,31 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
-import { useEffect, useState } from "react";
-import { Ionicons, MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
+import { useState } from "react";
+import { MaterialCommunityIcons, Octicons } from "@expo/vector-icons";
 import { Formik } from "formik";
 import * as Yup from "yup";
 import MessageModal from "../shared/modals/MessageModal";
-import Animated, { FadeInDown, FadeOutDown } from "react-native-reanimated";
 import { auth } from "../../services/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import isInatelEmail from "../../utils/isInatelEmail";
+import { COLORS } from "../../constants";
+
+const LoginFormSchema = Yup.object().shape({
+  email: Yup.string()
+    .required()
+    .test("inatel", "E-mail fora do domínio Inatel", isInatelEmail),
+  password: Yup.string().required().min(6),
+});
 
 const LoginForm = ({ navigation }) => {
   const [obsecureText, setObsecureText] = useState(true);
   const [emailOnFocus, setEmailOnFocus] = useState(false);
-  const [emailToValidate, SetEmailToValidate] = useState(false);
-  const [passwordToValidate, SetPasswordToValidate] = useState(false);
+  const [emailToValidate, setEmailToValidate] = useState(false);
+  const [passwordToValidate, setPasswordToValidate] = useState(false);
   const [messageModalVisible, setMessageModalVisible] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [developerMessage, setDeveloperMessage] = useState(false);
   const [loader, setLoader] = useState(false);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setDeveloperMessage(true);
-    }, 2000);
-    setTimeout(() => {
-      setDeveloperMessage(false);
-    }, 12000);
-  }, []);
 
   const handleDataError = (message) => {
     setErrorMessage(message);
@@ -44,36 +42,32 @@ const LoginForm = ({ navigation }) => {
     }, 3500);
   };
 
-  const LoginFormSchema = Yup.object().shape({
-    email: Yup.string()
-      .required()
-      .min(6, "A valid phone number, username or email address is required"),
-    password: Yup.string()
-      .required()
-      .min(6, "Your password has to have at least 8 characters"),
-  });
-
   const onLogin = async (email, password) => {
     Keyboard.dismiss();
+    const cleanEmail = email.trim().toLowerCase();
+    if (!isInatelEmail(cleanEmail)) {
+      handleDataError(
+        "Use seu e-mail do Inatel (@inatel.br ou @sigla.inatel.br)."
+      );
+      return;
+    }
     try {
       setLoader(true);
-      const userCredentials = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      console.log(
-        "🔥 Firebase Login Successful ✅",
-        userCredentials.user.email
-      );
+      await signInWithEmailAndPassword(auth, cleanEmail, password);
+      // O AuthNavigation assume a partir daqui (verificação de e-mail e perfil).
     } catch (error) {
-      console.log(error);
-      error.message ==
-        "Firebase: The password is invalid or the user does not have a password. (auth/wrong-password)." &&
-        handleDataError("The password is invalid, try again.");
-      error.message ==
-        "Firebase: There is no user record corresponding to this identifier. The user may have been deleted. (auth/user-not-found)." &&
-        handleDataError("Invalid email. Please verify your input.");
+      console.log(error.code);
+      if (
+        error.code === "auth/invalid-credential" ||
+        error.code === "auth/wrong-password" ||
+        error.code === "auth/user-not-found"
+      ) {
+        handleDataError("E-mail ou senha incorretos. Tente novamente.");
+      } else if (error.code === "auth/too-many-requests") {
+        handleDataError("Muitas tentativas. Aguarde um pouco e tente de novo.");
+      } else {
+        handleDataError("Não foi possível entrar. Tente novamente.");
+      }
     } finally {
       setLoader(false);
     }
@@ -96,7 +90,7 @@ const LoginForm = ({ navigation }) => {
                 styles.inputField,
                 {
                   borderColor:
-                    emailToValidate && values.email.length < 5
+                    emailToValidate && !isInatelEmail(values.email)
                       ? "#f00"
                       : "#444",
                 },
@@ -105,7 +99,7 @@ const LoginForm = ({ navigation }) => {
               <TextInput
                 style={styles.inputText}
                 placeholderTextColor={"#bbb"}
-                placeholder="Email"
+                placeholder="E-mail do Inatel"
                 autoCapitalize="none"
                 autoCorrect={false}
                 inputMode="email"
@@ -115,9 +109,7 @@ const LoginForm = ({ navigation }) => {
                 onBlur={() => {
                   handleBlur("email");
                   setEmailOnFocus(false);
-                  values.email.length > 0
-                    ? SetEmailToValidate(true)
-                    : SetEmailToValidate(false);
+                  setEmailToValidate(values.email.length > 0);
                 }}
                 onFocus={() => setEmailOnFocus(true)}
                 value={values.email}
@@ -130,6 +122,13 @@ const LoginForm = ({ navigation }) => {
                 />
               </TouchableOpacity>
             </View>
+            {emailToValidate &&
+              values.email.length > 0 &&
+              !isInatelEmail(values.email) && (
+                <Text style={styles.fieldError}>
+                  Somente e-mails @inatel.br ou @sigla.inatel.br
+                </Text>
+              )}
 
             <View
               style={[
@@ -145,7 +144,7 @@ const LoginForm = ({ navigation }) => {
               <TextInput
                 style={styles.inputText}
                 placeholderTextColor={"#bbb"}
-                placeholder="Password"
+                placeholder="Senha"
                 autoCapitalize="none"
                 autoCorrect={false}
                 secureTextEntry={obsecureText}
@@ -153,9 +152,7 @@ const LoginForm = ({ navigation }) => {
                 onChangeText={handleChange("password")}
                 onBlur={() => {
                   handleBlur("password");
-                  values.password.length > 0
-                    ? SetPasswordToValidate(true)
-                    : SetPasswordToValidate(false);
+                  setPasswordToValidate(values.password.length > 0);
                 }}
                 value={values.password}
               />
@@ -163,13 +160,13 @@ const LoginForm = ({ navigation }) => {
                 <MaterialCommunityIcons
                   name={obsecureText ? "eye-off" : "eye"}
                   size={24}
-                  color={obsecureText ? "#fff" : "#37e"}
+                  color={obsecureText ? "#fff" : COLORS.accent}
                 />
               </TouchableOpacity>
             </View>
             <View style={styles.forgotContainer}>
               <TouchableOpacity onPress={() => navigation.navigate("Forgot")}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={styles.forgotText}>Esqueceu a senha?</Text>
               </TouchableOpacity>
             </View>
             <TouchableOpacity onPress={handleSubmit} disabled={!isValid}>
@@ -177,24 +174,10 @@ const LoginForm = ({ navigation }) => {
                 {loader ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.btnText}>Log in</Text>
+                  <Text style={styles.btnText}>Entrar</Text>
                 )}
               </View>
             </TouchableOpacity>
-            <View style={{ height: 56 }}>
-              {developerMessage && (
-                <Animated.View
-                  style={styles.modalContainer}
-                  entering={FadeInDown.duration(1000)}
-                  exiting={FadeOutDown.duration(1000)}
-                >
-                  <Ionicons name={"logo-react"} size={24} color="#fff" />
-                  <Text style={styles.modalText}>
-                    Developed by Hernan Hawryluk
-                  </Text>
-                </Animated.View>
-              )}
-            </View>
           </View>
         )}
       </Formik>
@@ -235,23 +218,25 @@ const styles = StyleSheet.create({
     color: "#fff",
     width: "95%",
   },
+  fieldError: {
+    color: "#f66",
+    fontSize: 12,
+    marginTop: 6,
+    marginHorizontal: 24,
+  },
   forgotContainer: {
     alignItems: "flex-end",
     marginTop: 20,
     marginRight: 20,
   },
   forgotText: {
-    color: "#1af",
+    color: COLORS.link,
     fontWeight: "700",
-  },
-  loginBtn: {
-    backgroundColor: "#1af",
-    color: "#fff",
   },
   btnContainer: (isValid) => ({
     marginTop: 35,
     alignItems: "center",
-    backgroundColor: "#07f",
+    backgroundColor: COLORS.primary,
     opacity: isValid ? 1 : 0.6,
     marginHorizontal: 20,
     justifyContent: "center",
@@ -263,29 +248,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "800",
-  },
-  modalContainer: {
-    marginTop: 14,
-    marginHorizontal: 20,
-    backgroundColor: "#333",
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 7,
-      height: 7,
-    },
-    shadowOpacity: 0.5,
-    shadowRadius: 5,
-    borderRadius: 10,
-    height: 56,
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  modalText: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#fff",
-    marginBottom: Platform.OS === "android" ? 4 : 0,
   },
 });

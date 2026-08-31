@@ -33,7 +33,7 @@ const Favorites = ({ navigation }) => {
         <LinearGradient
           start={[0.9, 0.45]}
           end={[0.07, 1.03]}
-          colors={["#ff00ff", "#ff4400", "#ffff00"]}
+          colors={["#1E60AD", "#4581C4", "#7FD4FF"]}
           style={styles.rainbowBorder}
         >
           <AntDesign name="checkcircle" size={58} color={"#000"} />
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   button: {
-    color: "#09f",
+    color: "#4581C4",
     fontSize: 16,
     fontWeight: "700",
   },
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   emptyButton: {
-    color: "#09f",
+    color: "#4581C4",
     fontSize: 16,
     fontWeight: "700",
   },

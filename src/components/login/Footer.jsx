@@ -6,15 +6,16 @@ import {
   Platform,
 } from "react-native";
 import { Divider } from "react-native-elements";
+import { COLORS } from "../../constants";
 
 const Footer = ({ navigation }) => {
   return (
     <View>
       <Divider width={0.5} color="#333" />
       <View style={styles.signUpContainer}>
-        <Text style={styles.signUpText}>Don't have an account? </Text>
+        <Text style={styles.signUpText}>Não tem uma conta? </Text>
         <TouchableOpacity onPress={() => navigation.navigate("Signup")}>
-          <Text style={styles.signUpBtn}>Sign Up</Text>
+          <Text style={styles.signUpBtn}>Cadastre-se</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -35,7 +36,7 @@ const styles = StyleSheet.create({
     color: "#bbb",
   },
   signUpBtn: {
-    color: "#1af",
+    color: COLORS.link,
     fontWeight: "700",
   },
 });

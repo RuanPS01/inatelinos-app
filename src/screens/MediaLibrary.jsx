@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   nextButton: {
-    color: "#08f",
+    color: "#1E60AD",
     fontWeight: "800",
     fontSize: 16,
     marginBottom: 2,

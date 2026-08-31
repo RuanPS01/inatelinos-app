@@ -38,7 +38,7 @@ const Header = ({ navigation, headerOpacity, currentUser }) => {
     <Animated.View style={{ opacity: headerOpacity }}>
       <View style={styles.container}>
         <TouchableOpacity
-          style={styles.instagramContainer}
+          style={styles.logoContainer}
           onPress={() => setFilterModalVisible(true)}
         >
           <Image
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     backgroundColor: "#000",
   },
-  instagramContainer: {
+  logoContainer: {
     flexDirection: "row",
     justifyContent: "flex-start",
     alignItems: "center",

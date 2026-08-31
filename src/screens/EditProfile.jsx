@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   imageText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#09f",
+    color: "#4581C4",
     marginTop: 16,
     paddingLeft: 7,
   },

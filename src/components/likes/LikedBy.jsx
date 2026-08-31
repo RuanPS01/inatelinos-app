@@ -44,7 +44,7 @@ const LikedBy = ({ navigation, user, currentUser }) => {
           <LinearGradient
             start={[0.9, 0.45]}
             end={[0.07, 1.03]}
-            colors={["#ff00ff", "#ff4400", "#ffff00"]}
+            colors={["#1E60AD", "#4581C4", "#7FD4FF"]}
             style={styles.rainbowBorder}
           >
             <View style={styles.imageBackground} />

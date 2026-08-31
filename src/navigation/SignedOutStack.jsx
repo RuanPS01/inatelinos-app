@@ -1,7 +1,7 @@
 import Login from "../screens/Login";
+import Signup from "../screens/Signup";
 import Forgot from "../screens/Forgot";
 import { NavigationContainer } from "@react-navigation/native";
-import Signup from "../screens/Signup";
 import { createStackNavigator } from "@react-navigation/stack";
 
 const Stack = createStackNavigator();
